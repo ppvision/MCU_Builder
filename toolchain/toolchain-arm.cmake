@@ -13,13 +13,17 @@ ENDIF()
 # EXECUTABLE EXTENSION
 SET (CMAKE_EXECUTABLE_SUFFIX_C ".elf")
 
+if(NOT GCC_ARMCOMPILER)
+    SET(TOOLCHAIN_DIR $ENV{ARMGCC_DIR})
+ELSE()
+    SET(TOOLCHAIN_DIR ${GCC_ARMCOMPILER})
+ENDIF()
 
-SET(TOOLCHAIN_DIR $ENV{ARMGCC_DIR})
 STRING(REGEX REPLACE "\\\\" "/" TOOLCHAIN_DIR "${TOOLCHAIN_DIR}")
 IF(NOT TOOLCHAIN_DIR)
     MESSAGE(FATAL_ERROR "***Please set ARMGCC_DIR in envionment variables***")
 ENDIF()
-# MESSAGE(STATUS "TOOLCHAIN_DIR: " ${TOOLCHAIN_DIR})
+MESSAGE(STATUS "TOOLCHAIN_DIR: " ${TOOLCHAIN_DIR})
 
 
 SET(TARGET_TRIPLET "arm-none-eabi")
@@ -33,20 +37,19 @@ SET(CMAKE_C_COMPILER   ${TOOLCHAIN_BIN_DIR}/${TARGET_TRIPLET}-gcc${TOOLCHAIN_EXT
 SET(CMAKE_CXX_COMPILER ${TOOLCHAIN_BIN_DIR}/${TARGET_TRIPLET}-g++${TOOLCHAIN_EXT})
 SET(CMAKE_ASM_COMPILER ${TOOLCHAIN_BIN_DIR}/${TARGET_TRIPLET}-gcc${TOOLCHAIN_EXT})
 
+MESSAGE(STATUS "CMAKE_C_COMPILER: " ${CMAKE_C_COMPILER})
+
 
 SET(CMAKE_AR     ${TOOLCHAIN_BIN_DIR}/${TARGET_TRIPLET}-gcc-ar${TOOLCHAIN_EXT})
 SET(CMAKE_RANLIB ${TOOLCHAIN_BIN_DIR}/${TARGET_TRIPLET}-gcc-ranlib)
 
-
-set(CMAKE_C_COMPILER_FORCED TRUE)
-set(CMAKE_CXX_COMPILER_FORCED TRUE)
 
 
 SET(CMAKE_C_COMPILER_WORKS 1)
 SET(CMAKE_CXX_COMPILER_WORKS 1)
 # Disable compiler checks.
 
-set(CMAKE_C_COMPILER_ID_RUN TRUE)
+set(CMAKE_C_COMPILER_ID_RUN   TRUE)
 set(CMAKE_C_COMPILER_FORCED   TRUE)
 set(CMAKE_CXX_COMPILER_FORCED TRUE)
 
@@ -58,38 +61,36 @@ if(NOT TARGET_PROCESSOR)
     message(FATAL_ERROR "you need set TARGET_PROCESSOR =>" "m0 m0plus m33 m4 m4f m7")
     return()
 else ()
-    add_compile_options(-Wno-format -Wno-unused-function -Wno-maybe-uninitialized -Wunused-but-set-variable)
-    # -Wl,--cref -fsingle-precision-constant
-    # add_link_options(-static -Wl,--gc-sections -Wl,--check-sections -lc_nano  -Wl,--no-whole-archive)
-    # -mfpu=fpv4-sp-d16 -mfloat-abi=hard
-    add_link_options(-Wl,-A,thumb -Wl,--print-memory-usage -specs=nosys.specs  -mthumb -static --specs=nano.specs -Wl,--gc-sections -Wl,--check-sections  -Wl,--no-whole-archive -lc_nano)
-    if(TARGET_PROCESSOR STREQUAL "m0")
-        add_compile_options(-mcpu=cortex-m0 -mfloat-abi=soft)
-        add_link_options(-mcpu=cortex-m0 -mfloat-abi=soft)
-    elseif(TARGET_PROCESSOR STREQUAL "m0plus")
-        add_compile_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
-        add_link_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
+    # -Wl,-A,
+    add_compile_options(-std=c99 -Wno-format -Wno-unused-function -Wno-maybe-uninitialized -Wunused-but-set-variable)
+    add_link_options(-mthumb  -Wl,--print-memory-usage  -static --specs=nano.specs -Wl,--gc-sections -Wl,--check-sections  -Wl,--no-whole-archive -nostartfiles)
+    # if(TARGET_PROCESSOR STREQUAL "m0")
+    #     add_compile_options(-mcpu=cortex-m0 -mfloat-abi=soft)
+    #     add_link_options(-mcpu=cortex-m0 -mfloat-abi=soft)
+    # elseif(TARGET_PROCESSOR STREQUAL "m0plus")
+    #     add_compile_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
+    #     add_link_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
 
-    elseif(TARGET_PROCESSOR STREQUAL "m4")
-        add_compile_options(-mcpu=cortex-m4 -mfloat-abi=soft )
-        add_link_options(-mcpu=cortex-m4 -mfloat-abi=soft )
-    elseif(TARGET_PROCESSOR STREQUAL "m4f")
-        message("TARGET_PROCESSOR is m4f")
-        add_compile_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-        add_link_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    elseif(TARGET_PROCESSOR STREQUAL "m33")
-        add_compile_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-        add_link_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    elseif(TARGET_PROCESSOR STREQUAL "m7")
-        add_compile_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-        add_link_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    endif()
+    # elseif(TARGET_PROCESSOR STREQUAL "m4")
+    #     add_compile_options(-mcpu=cortex-m4 -mfloat-abi=soft )
+    #     add_link_options(-mcpu=cortex-m4 -mfloat-abi=soft )
+    # elseif(TARGET_PROCESSOR STREQUAL "m4f")
+    #     message("TARGET_PROCESSOR is m4f")
+    #     add_compile_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    #     add_link_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    # elseif(TARGET_PROCESSOR STREQUAL "m33")
+    #     add_compile_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    #     add_link_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    # elseif(TARGET_PROCESSOR STREQUAL "m7")
+    #     add_compile_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    #     add_link_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    # endif()
 
 endif()
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    add_compile_options(-g -ggdb -O0)
+    add_compile_options(-g -ggdb -O0 -gstrict-dwarf)
 else()
     add_compile_options(-Os)
 endif()
@@ -112,21 +113,11 @@ endif()
 
 if (NOT TARGET TOOLCHAIN_gcc)
     add_library(TOOLCHAIN_gcc INTERFACE IMPORTED)
-    target_compile_options(
-        TOOLCHAIN_gcc
-        INTERFACE -mthumb
-                  -std=gnu99
-                  # -std=c11
-                  # $<$<COMPILE_LANGUAGE:C>:-g
-                  # -mabi=aapcs
-                  # -Dgcc
-                  -ffunction-sections -Wl,--gc-sections
-                  -fstack-usage
-                  -fdata-sections
-                  -fsingle-precision-constant
-                  # >
-                  $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:-O2>
-                  $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:-O0 -g>
+    # message(FATAL_ERROR "TOOLCHAIN_gcc" "m0 m0plus m33 m4 m4f m7")
+    target_compile_options(TOOLCHAIN_gcc INTERFACE 
+        $<$<COMPILE_LANGUAGE:C>:-ffunction-sections -fdata-sections -fstack-usage -fsingle-precision-constant>
+        $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:-O2>
+        $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:-g -ggdb -O0 -gstrict-dwarf>
     )
 
     target_link_options(
@@ -136,7 +127,7 @@ if (NOT TARGET TOOLCHAIN_gcc)
         $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TI_LINKER_COMMAND_FILE>,>>:-Wl,-T,$<TARGET_PROPERTY:TI_LINKER_COMMAND_FILE>>
         # If map-file property exists, set map file
         $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TI_LINKER_MAP_FILE>,>>:-Wl,-Map,$<TARGET_PROPERTY:TI_LINKER_MAP_FILE>>
-        --specs=nano.specs
+        # --specs=nano.specs
         # -specs=nosys.specs
         # Disables 0x10000 sector allocation boundaries, which interfere
         # with the SPE layouts and prevent proper secure operation
@@ -144,34 +135,38 @@ if (NOT TARGET TOOLCHAIN_gcc)
     )
 
     add_library(TOOLCHAIN_gcc_m0 INTERFACE IMPORTED)
-    target_link_libraries(TOOLCHAIN_gcc_m0 INTERFACE TOOLCHAIN_gcc)
+    target_link_libraries(TOOLCHAIN_gcc_m0 INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m0 -mfloat-abi=soft)
     target_compile_options(TOOLCHAIN_gcc_m0 INTERFACE -mcpu=cortex-m0 -mfloat-abi=soft)
     # add_library(CMakeCommon::gcc_m0p ALIAS TOOLCHAIN_gcc_m0)
 
     add_library(TOOLCHAIN_gcc_m0p INTERFACE IMPORTED)
-    target_link_libraries(TOOLCHAIN_gcc_m0p INTERFACE TOOLCHAIN_gcc)
+    target_link_libraries(TOOLCHAIN_gcc_m0p INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m0plus -mfloat-abi=soft)
     target_compile_options(TOOLCHAIN_gcc_m0p INTERFACE -mcpu=cortex-m0plus -mfloat-abi=soft)
     # add_library(CMakeCommon::gcc_m0p ALIAS TOOLCHAIN_gcc_m0p)
 
     add_library(TOOLCHAIN_gcc_m4 INTERFACE IMPORTED)
-    target_link_libraries(TOOLCHAIN_gcc_m4 INTERFACE TOOLCHAIN_gcc)
+    target_link_libraries(TOOLCHAIN_gcc_m4 INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m4 -mfloat-abi=soft)
     target_compile_options(TOOLCHAIN_gcc_m4 INTERFACE -mcpu=cortex-m4 -mfloat-abi=soft)
     # add_library(CMakeCommon::gcc_m4 ALIAS TOOLCHAIN_gcc_m4)
 
     add_library(TOOLCHAIN_gcc_m4f INTERFACE IMPORTED)
-    target_link_libraries(TOOLCHAIN_gcc_m4f INTERFACE TOOLCHAIN_gcc)
+    target_link_libraries(TOOLCHAIN_gcc_m4f INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
     target_compile_options(TOOLCHAIN_gcc_m4f INTERFACE -mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
     # add_library(CMakeCommon::gcc_m4f ALIAS TOOLCHAIN_gcc_m4f)
 
     add_library(TOOLCHAIN_gcc_m33f INTERFACE IMPORTED)
-    target_link_libraries(TOOLCHAIN_gcc_m33f INTERFACE TOOLCHAIN_gcc)
+    target_link_libraries(TOOLCHAIN_gcc_m33f INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16)
     target_compile_options(TOOLCHAIN_gcc_m33f INTERFACE -mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv5-sp-d16)
     # add_library(CMakeCommon::gcc_m33f ALIAS TOOLCHAIN_gcc_m33f)
+
+    add_library(TOOLCHAIN_gcc_m7 INTERFACE IMPORTED)
+    target_link_libraries(TOOLCHAIN_gcc_m7 INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16)
+    target_compile_options(TOOLCHAIN_gcc_m7 INTERFACE -mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv5-sp-d16)
 endif ()
 
 
-
-remove_duplicated_flags("-fvisibility=hidden -Wall -Wextra ${CMAKE_C_FLAGS}" UNIQ_CMAKE_C_FLAGS)
+# -fvisibility=hidden -Wall -Wextra
+remove_duplicated_flags("-fvisibility=hidden ${CMAKE_C_FLAGS}" UNIQ_CMAKE_C_FLAGS)
 set(CMAKE_C_FLAGS "${UNIQ_CMAKE_C_FLAGS}" CACHE STRING "C Compiler Base Flags" FORCE)
 
 
