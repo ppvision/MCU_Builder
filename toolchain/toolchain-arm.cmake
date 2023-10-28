@@ -65,33 +65,33 @@ else ()
     add_compile_options(-Wno-format -Wno-unused-function -Wno-maybe-uninitialized -Wunused-but-set-variable)
     # -Wl,--cref -fsingle-precision-constant
     # add_link_options(-static -Wl,--gc-sections -Wl,--check-sections -lc_nano  -Wl,--no-whole-archive)
-    # -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+    # -mfpu=fpv4-sp-d16 -mfloat-abi=hard --specs=nano.specs
     
+    #--specs=nosys.specs -lc_nano
 
-    # add_link_options(-Wl,-A,thumb -Wl,--print-memory-usage -specs=nosys.specs  -mthumb -static --specs=nano.specs -Wl,--gc-sections -Wl,--check-sections  -Wl,--no-whole-archive -lc_nano)
-    # if(TARGET_PROCESSOR STREQUAL "m0")
-    #     add_compile_options(-mcpu=cortex-m0 -mfloat-abi=soft)
-    #     add_link_options(-mcpu=cortex-m0 -mfloat-abi=soft)
-    # elseif(TARGET_PROCESSOR STREQUAL "m0plus")
-    #     add_compile_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
-    #     add_link_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
-    # elseif(TARGET_PROCESSOR STREQUAL "m3")
-    #     add_compile_options(-mcpu=cortex-m3 -mfloat-abi=soft)
-    #     add_link_options(-mcpu=cortex-m3 -mfloat-abi=soft)
-    # elseif(TARGET_PROCESSOR STREQUAL "m4")
-    #     add_compile_options(-mcpu=cortex-m4 -mfloat-abi=soft )
-    #     add_link_options(-mcpu=cortex-m4 -mfloat-abi=soft )
-    # elseif(TARGET_PROCESSOR STREQUAL "m4f")
-    #     message("TARGET_PROCESSOR is m4f")
-    #     add_compile_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    #     add_link_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    # elseif(TARGET_PROCESSOR STREQUAL "m33")
-    #     add_compile_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    #     add_link_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    # elseif(TARGET_PROCESSOR STREQUAL "m7")
-    #     add_compile_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    #     add_link_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
-    # endif()
+    add_link_options(-Wl,-A,thumb -Wl,--print-memory-usage  -mthumb -static  -Wl,--gc-sections -Wl,--check-sections  -Wl,--no-whole-archive )
+    if(TARGET_PROCESSOR STREQUAL "m0")
+        add_compile_options(-mcpu=cortex-m0 -mfloat-abi=soft)
+        add_link_options(-mcpu=cortex-m0 -mfloat-abi=soft)
+    elseif(TARGET_PROCESSOR STREQUAL "m0plus")
+        add_compile_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
+        add_link_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
+
+    elseif(TARGET_PROCESSOR STREQUAL "m4")
+        add_compile_options(-mcpu=cortex-m4 -mfloat-abi=soft )
+        add_link_options(-mcpu=cortex-m4 -mfloat-abi=soft )
+    elseif(TARGET_PROCESSOR STREQUAL "m4f")
+        message("TARGET_PROCESSOR is m4f")
+        add_compile_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+        add_link_options(-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    elseif(TARGET_PROCESSOR STREQUAL "m33")
+        add_compile_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+        add_link_options(-mcpu=cortex-m33 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    elseif(TARGET_PROCESSOR STREQUAL "m7")
+        add_compile_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+        add_link_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
+    endif()
+
 endif()
 
 
@@ -121,7 +121,7 @@ if (NOT TARGET TOOLCHAIN_gcc)
     add_library(TOOLCHAIN_gcc INTERFACE IMPORTED)
     # message(FATAL_ERROR "TOOLCHAIN_gcc" "m0 m0plus m33 m4 m4f m7")
     target_compile_options(TOOLCHAIN_gcc INTERFACE 
-        $<$<COMPILE_LANGUAGE:C>:-ffunction-sections -fdata-sections -fstack-usage -fsingle-precision-constant>
+        $<$<COMPILE_LANGUAGE:C>: -std=c11 -ffunction-sections -fdata-sections -fstack-usage -fsingle-precision-constant>
         $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:-O2>
         $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:-g -ggdb -O0 -gstrict-dwarf>
     )
@@ -133,8 +133,11 @@ if (NOT TARGET TOOLCHAIN_gcc)
         $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TI_LINKER_COMMAND_FILE>,>>:-Wl,-T,$<TARGET_PROPERTY:TI_LINKER_COMMAND_FILE>>
         # If map-file property exists, set map file
         $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TI_LINKER_MAP_FILE>,>>:-Wl,-Map,$<TARGET_PROPERTY:TI_LINKER_MAP_FILE>>
+        --specs=nosys.specs
         # --specs=nano.specs
-        # -specs=nosys.specs
+        # -lc_nano
+        -lnosys
+        -Wl,--no-warn-rwx-segments
         # Disables 0x10000 sector allocation boundaries, which interfere
         # with the SPE layouts and prevent proper secure operation
         # --nmagic
