@@ -58,19 +58,26 @@ SET(CMAKE_FIND_ROOT_PATH ${TOOLCHAIN_DIR}/${TARGET_TRIPLET} ${EXTRA_FIND_PATH})
 
 
 if(NOT TARGET_PROCESSOR)
-    message(FATAL_ERROR "you need set TARGET_PROCESSOR =>" "m0 m0plus m33 m4 m4f m7")
+    message(FATAL_ERROR "you need set TARGET_PROCESSOR =>" "m0 m0plus m3 m33 m4 m4f m7")
     return()
 else ()
     # -Wl,-A,
-    add_compile_options(-std=c99 -Wno-format -Wno-unused-function -Wno-maybe-uninitialized -Wunused-but-set-variable)
-    add_link_options(-mthumb  -Wl,--print-memory-usage  -static --specs=nano.specs -Wl,--gc-sections -Wl,--check-sections  -Wl,--no-whole-archive -nostartfiles)
+    add_compile_options(-Wno-format -Wno-unused-function -Wno-maybe-uninitialized -Wunused-but-set-variable)
+    # -Wl,--cref -fsingle-precision-constant
+    # add_link_options(-static -Wl,--gc-sections -Wl,--check-sections -lc_nano  -Wl,--no-whole-archive)
+    # -mfpu=fpv4-sp-d16 -mfloat-abi=hard
+    
+
+    # add_link_options(-Wl,-A,thumb -Wl,--print-memory-usage -specs=nosys.specs  -mthumb -static --specs=nano.specs -Wl,--gc-sections -Wl,--check-sections  -Wl,--no-whole-archive -lc_nano)
     # if(TARGET_PROCESSOR STREQUAL "m0")
     #     add_compile_options(-mcpu=cortex-m0 -mfloat-abi=soft)
     #     add_link_options(-mcpu=cortex-m0 -mfloat-abi=soft)
     # elseif(TARGET_PROCESSOR STREQUAL "m0plus")
     #     add_compile_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
     #     add_link_options(-mcpu=cortex-m0plus -mfloat-abi=soft)
-
+    # elseif(TARGET_PROCESSOR STREQUAL "m3")
+    #     add_compile_options(-mcpu=cortex-m3 -mfloat-abi=soft)
+    #     add_link_options(-mcpu=cortex-m3 -mfloat-abi=soft)
     # elseif(TARGET_PROCESSOR STREQUAL "m4")
     #     add_compile_options(-mcpu=cortex-m4 -mfloat-abi=soft )
     #     add_link_options(-mcpu=cortex-m4 -mfloat-abi=soft )
@@ -85,7 +92,6 @@ else ()
     #     add_compile_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
     #     add_link_options(-mcpu=cortex-m7 -mfloat-abi=hard -mfpu=fpv4-sp-d16)
     # endif()
-
 endif()
 
 
@@ -143,6 +149,10 @@ if (NOT TARGET TOOLCHAIN_gcc)
     target_link_libraries(TOOLCHAIN_gcc_m0p INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m0plus -mfloat-abi=soft)
     target_compile_options(TOOLCHAIN_gcc_m0p INTERFACE -mcpu=cortex-m0plus -mfloat-abi=soft)
     # add_library(CMakeCommon::gcc_m0p ALIAS TOOLCHAIN_gcc_m0p)
+
+    add_library(TOOLCHAIN_gcc_m3 INTERFACE IMPORTED)
+    target_link_libraries(TOOLCHAIN_gcc_m3 INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m3 -mfloat-abi=soft)
+    target_compile_options(TOOLCHAIN_gcc_m3 INTERFACE -mcpu=cortex-m3 -mfloat-abi=soft)
 
     add_library(TOOLCHAIN_gcc_m4 INTERFACE IMPORTED)
     target_link_libraries(TOOLCHAIN_gcc_m4 INTERFACE TOOLCHAIN_gcc -mcpu=cortex-m4 -mfloat-abi=soft)

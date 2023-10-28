@@ -5,12 +5,13 @@
 # GCC_ARMCOMPILER       
 
 
-# if (DEFINED ENV{XDC_INSTALL_DIR} AND (NOT XDC_INSTALL_DIR))
-#     set(XDC_INSTALL_DIR $ENV{XDC_INSTALL_DIR})
-#     message("Using XDC_INSTALL_DIR from environment ('${XDC_INSTALL_DIR}')")
-# else ()
-#     MESSAGE(FATAL_ERROR "***Please set XDC_INSTALL_DIR in envionment variables***")
-# endif ()
+if (DEFINED ENV{XDC_INSTALL_DIR} AND (NOT XDC_INSTALL_DIR))
+    set(XDC_INSTALL_DIR $ENV{XDC_INSTALL_DIR})
+    message("Using XDC_INSTALL_DIR from environment ('${XDC_INSTALL_DIR}')")
+else ()
+    MESSAGE(FATAL_ERROR "***Please set XDC_INSTALL_DIR in envionment variables***")
+endif ()
+
 
 if (DEFINED ENV{CC26XX_SDK_DIR} AND (NOT CC26XX_SDK_DIR))
     set(CC26XX_SDK_DIR $ENV{CC26XX_SDK_DIR})
