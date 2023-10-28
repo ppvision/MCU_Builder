@@ -7,6 +7,8 @@
 # - Value of any non-empty environment variable of the same name
 # - Default value as provided to function
 #
+enable_language(ASM)
+
 function(set_default variable default_value)
     if(NOT ${variable})
         if(DEFINED ENV{${variable}} AND NOT "$ENV{${variable}}" STREQUAL "")
@@ -143,3 +145,25 @@ macro (target_linker_file target linkerfile)
 endmacro ()
 
 
+
+function(add_hex_output TARGET)
+    add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.hex
+        VERBATIM)
+endfunction()
+
+function(add_bin_output TARGET)
+    add_custom_command(TARGET ${TARGET} POST_BUILD COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${TARGET}> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.bin
+        VERBATIM)
+endfunction()
+
+function(add_dis_output TARGET)
+    add_custom_command(TARGET ${TARGET} POST_BUILD
+            COMMAND ${CMAKE_OBJDUMP} -h $<TARGET_FILE:${TARGET}> > $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis
+            COMMAND ${CMAKE_OBJDUMP} -d $<TARGET_FILE:${TARGET}> >> $<IF:$<BOOL:$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>>,$<TARGET_PROPERTY:${TARGET},OUTPUT_NAME>,$<TARGET_PROPERTY:${TARGET},NAME>>.dis
+            VERBATIM)
+endfunction()
+
+function(add_extra_outputs TARGET)
+    add_hex_output(${TARGET})
+    add_bin_output(${TARGET})
+endfunction()
