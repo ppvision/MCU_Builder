@@ -7,7 +7,6 @@
 # - Value of any non-empty environment variable of the same name
 # - Default value as provided to function
 #
-enable_language(ASM)
 
 function(set_default variable default_value)
     if(NOT ${variable})
@@ -144,6 +143,13 @@ macro (target_linker_file target linkerfile)
     endif()
 endmacro ()
 
+# add map file generation for the given target
+function(add_map_output TARGET)
+    get_target_property(target_type ${TARGET} TYPE)
+    if ("EXECUTABLE" STREQUAL "${target_type}")
+        target_link_options(${TARGET} PRIVATE "-Wl,-Map,$<IF:$<BOOL:$<TARGET_PROPERTY:OUTPUT_NAME>>,$<TARGET_PROPERTY:OUTPUT_NAME>,$<TARGET_PROPERTY:NAME>>${CMAKE_EXECUTABLE_SUFFIX}.map")
+    endif ()
+endfunction()
 
 
 function(add_hex_output TARGET)
