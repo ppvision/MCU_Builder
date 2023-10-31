@@ -8,6 +8,17 @@
 # - Default value as provided to function
 #
 
+MACRO(get_sub_dirs result curdir)
+  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
+  SET(dirlist "")
+  FOREACH(child ${children})
+    IF(IS_DIRECTORY ${curdir}/${child})
+      LIST(APPEND dirlist ${child})
+    ENDIF()
+  ENDFOREACH()
+  SET(${result} ${dirlist})
+ENDMACRO()
+
 function(set_default variable default_value)
     if(NOT ${variable})
         if(DEFINED ENV{${variable}} AND NOT "$ENV{${variable}}" STREQUAL "")

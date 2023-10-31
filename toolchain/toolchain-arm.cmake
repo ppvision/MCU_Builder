@@ -189,6 +189,6 @@ remove_duplicated_flags("-fvisibility=hidden -Wall -Wextra ${CMAKE_CXX_FLAGS}" U
 set(CMAKE_CXX_FLAGS "${UNIQ_CMAKE_CXX_FLAGS}" CACHE STRING "C++ Compiler Base Flags" FORCE)
 
 
-message("CMAKE_EXE_LINKER_FLAGS  ${CMAKE_EXE_LINKER_FLAGS}")
+
 remove_duplicated_flags("${CMAKE_EXE_LINKER_FLAGS}" UNIQ_CMAKE_SAFE_EXE_LINKER_FLAGS)
 set(CMAKE_EXE_LINKER_FLAGS "${UNIQ_CMAKE_SAFE_EXE_LINKER_FLAGS}" CACHE STRING "Linker Base Flags" FORCE)
