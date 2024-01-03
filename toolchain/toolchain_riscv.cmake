@@ -93,7 +93,7 @@ if(1)
         -Wno-error=unused-variable
         -Wno-error=format=
         -Wno-error=unused-function
-        # -Wno-error=implicit-function-declaration
+        -Wno-error=implicit-function-declaration
         -Wno-error=deprecated-declarations
         # -Wno-error=absolute-value
         # -Wno-error=type-limits
@@ -140,6 +140,14 @@ endif()
 #它还可能会删除可能被程序的其他部分（如插件或库）使用的代码和数据。
 #因此，使用此选项时需要小心，并对结果进行彻底的测试，以确保程序能够正常工作
 
+#for **newlib-nano** is available using the `--specs=nano.specs` option. 
+#For better results, this option must be added to both compile and link time.
+
+# 在使用riscv-none-embed-gcc 编译时 要加上参数-march=rv32imac -mabi=ilp32来指定内核和二进制接口类型
+
+## nosys.specs
+#If no syscalls are needed, `--specs=nosys.specs` can be used at link time to provide empty implementations for the POSIX system calls.
+
 if (NOT TARGET TOOLCHAIN_gcc)
     add_library(TOOLCHAIN_gcc INTERFACE IMPORTED)
     # message(FATAL_ERROR "TOOLCHAIN_gcc" "m0 m0plus m33 m4 m4f m7")
@@ -167,7 +175,7 @@ if (NOT TARGET TOOLCHAIN_gcc)
         # --nmagic
         # -mabi=ilp32f
     )
-
+# `march=rv32imaf/mabi=ilp32f`
 # without     -nostartfiles >>in function `_start':  (.text+0x8): undefined reference to `__bss_start'
 
     add_library(TOOLCHAIN_gcc_riscv32 INTERFACE IMPORTED)
