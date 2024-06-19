@@ -8,7 +8,6 @@ elseif(TARGET_PROCESSOR MATCHES "riscv32")
   set(CMAKE_SYSTEM_PROCESSOR riscv)
 endif()
 
-
 IF(WIN32)
     SET(TOOLCHAIN_EXT ".exe")
 ELSE()
@@ -18,13 +17,14 @@ ENDIF()
 # EXECUTABLE EXTENSION
 SET (CMAKE_EXECUTABLE_SUFFIX_C ".elf")
 
-
-if(NOT GCC_RISCVCOMPILER)
-    SET(TOOLCHAIN_DIR $ENV{RISCVGCC_DIR})
-ELSE()
-    SET(TOOLCHAIN_DIR ${GCC_RISCVCOMPILER})
+if(NOT TOOLCHAIN_DIR)
+    if(NOT GCC_RISCVCOMPILER)
+        SET(TOOLCHAIN_DIR $ENV{RISCVGCC_DIR})
+    ELSE()
+        SET(TOOLCHAIN_DIR ${GCC_RISCVCOMPILER})
+    ENDIF()
 ENDIF()
-SET(TOOLCHAIN_DIR /Users/bright/.toolchain/xpack-riscv-none-elf-gcc-12.2.0-3)
+
 STRING(REGEX REPLACE "\\\\" "/" TOOLCHAIN_DIR "${TOOLCHAIN_DIR}")
 IF(NOT TOOLCHAIN_DIR)
     MESSAGE(FATAL_ERROR "***Please set RISCVGCC_DIR in envionment variables***")
@@ -32,7 +32,9 @@ ENDIF()
 MESSAGE(STATUS "TOOLCHAIN_DIR: " ${TOOLCHAIN_DIR})
 
 
-SET(TARGET_TRIPLET "riscv-none-elf")
+#SET(TARGET_TRIPLET "riscv-none-elf")
+# SET(TARGET_TRIPLET "riscv-none-embed")
+
 SET(TOOLCHAIN_BIN_DIR ${TOOLCHAIN_DIR}/bin)
 SET(TOOLCHAIN_INC_DIR ${TOOLCHAIN_DIR}/${TARGET_TRIPLET}/include)
 SET(TOOLCHAIN_LIB_DIR ${TOOLCHAIN_DIR}/${TARGET_TRIPLET}/lib)
@@ -72,7 +74,7 @@ if(NOT TARGET_PROCESSOR)
     message(FATAL_ERROR "you need set TARGET_PROCESSOR =>" "riscv32 riscv64")
     return()
 else ()
-if(1)
+
     add_compile_options(
         -fno-jump-tables
         -fno-common
@@ -84,7 +86,7 @@ if(1)
         -Wall
         -Wchar-subscripts
         -Wformat
-        # -Wundef
+        -Wundef
         -Winit-self
         -Wignored-qualifiers
         -fstrict-volatile-bitfields
@@ -106,22 +108,26 @@ if(1)
         -fms-extensions
         -ffunction-sections
         -fdata-sections
-        -Wl,--print-memory-usage  
+        -fno-common
+        -Wl,--print-memory-usage
         -Wl,--gc-sections 
         -Wl,--check-sections 
     )
-endif()
 
     if(TARGET_PROCESSOR STREQUAL "riscv32")
-        #add_link_options(-mcpu=cortex-m0 -mfloat-abi=soft)
+        add_compile_options(-march=rv32imac -mabi=ilp32)
+        add_link_options(-march=rv32imac -mabi=ilp32)
+    elseif(TARGET_PROCESSOR STREQUAL "riscv32f")
+        add_compile_options(-march=rv32imaf -mabi=ilp32f)
+        add_link_options(-march=rv32imaf -mabi=ilp32f)
     endif()
 endif()
 
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    # add_compile_options(-g -ggdb -O0 -gstrict-dwarf)
+    add_compile_options(-g -ggdb -O0 -gstrict-dwarf)
 else()
-    # add_compile_options(-Os)
+    add_compile_options(-Os)
 endif()
 
 #在默认情况下，GCC编译器会将所有函数的代码放在同一个代码段中。这意味着在链接时，
@@ -150,11 +156,10 @@ endif()
 
 if (NOT TARGET TOOLCHAIN_gcc)
     add_library(TOOLCHAIN_gcc INTERFACE IMPORTED)
-    # message(FATAL_ERROR "TOOLCHAIN_gcc" "m0 m0plus m33 m4 m4f m7")
     target_compile_options(TOOLCHAIN_gcc INTERFACE 
-        $<$<COMPILE_LANGUAGE:C>: -std=c11 -ffunction-sections -fdata-sections -fstack-usage -fsingle-precision-constant>
+        $<$<COMPILE_LANGUAGE:C>: -std=gnu99 -ffunction-sections -fdata-sections -fstack-usage >
         $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Release>>:-O2>
-        $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:-g -ggdb -O0 > #-gstrict-dwarf
+        $<$<AND:$<COMPILE_LANGUAGE:C>,$<CONFIG:Debug>>:-g -ggdb -O0 -gstrict-dwarf>
     )
 
     target_link_options(
@@ -164,23 +169,26 @@ if (NOT TARGET TOOLCHAIN_gcc)
         $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TI_LINKER_COMMAND_FILE>,>>:-Wl,-T,$<TARGET_PROPERTY:TI_LINKER_COMMAND_FILE>>
         # If map-file property exists, set map file
         $<$<NOT:$<STREQUAL:$<TARGET_PROPERTY:TI_LINKER_MAP_FILE>,>>:-Wl,-Map,$<TARGET_PROPERTY:TI_LINKER_MAP_FILE>>
+        -nostartfiles -Os
         --specs=nosys.specs
+        --specs=nano.specs
         -lnosys
-        -nostartfiles
-        # --specs=nano.specs
-        # -lc_nano
+        #-lc_nano
         -fstrict-volatile-bitfields
         # Disables 0x10000 sector allocation boundaries, which interfere
         # with the SPE layouts and prevent proper secure operation
         # --nmagic
-        # -mabi=ilp32f
     )
-# `march=rv32imaf/mabi=ilp32f`
-# without     -nostartfiles >>in function `_start':  (.text+0x8): undefined reference to `__bss_start'
 
+# without     -nostartfiles >>in function `_start':  (.text+0x8): undefined reference to `__bss_start'
     add_library(TOOLCHAIN_gcc_riscv32 INTERFACE IMPORTED)
-    target_link_libraries(TOOLCHAIN_gcc_riscv32 INTERFACE TOOLCHAIN_gcc -march=rv32imafc -mabi=ilp32) #-mcpu=cortex-m0 -mfloat-abi=soft
-    target_compile_options(TOOLCHAIN_gcc_riscv32 INTERFACE  -march=rv32imafc -mabi=ilp32) # -march=rv32g -mabi=ilp32 -static -mcmodel=medany -fvisibility=hidden -nostdlib -nostartfiles
+    target_link_libraries(TOOLCHAIN_gcc_riscv32 INTERFACE TOOLCHAIN_gcc -march=rv32imac -mabi=ilp32)
+    target_compile_options(TOOLCHAIN_gcc_riscv32 INTERFACE  -march=rv32imac -mabi=ilp32)
+
+
+    add_library(TOOLCHAIN_gcc_riscv32f INTERFACE IMPORTED)
+    target_link_libraries(TOOLCHAIN_gcc_riscv32f INTERFACE TOOLCHAIN_gcc -march=rv32imaf -mabi=ilp32f)
+    target_compile_options(TOOLCHAIN_gcc_riscv32f INTERFACE  -march=rv32imaf -mabi=ilp32f)
 
 endif ()
 
